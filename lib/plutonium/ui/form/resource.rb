@@ -61,6 +61,9 @@ module Plutonium
           input_definition = definition.defined_inputs[name] || {}
           input_options = input_definition[:options] || {}
 
+          condition = input_options[:condition] || field_options[:condition]
+          hidden = condition && !instance_exec(&condition)
+
           tag = input_options[:as] || field_options[:as]
           tag_attributes = input_options.except(:wrapper, :as, :pre_submit, :condition)
           if input_options[:pre_submit]
@@ -69,6 +72,10 @@ module Plutonium
           tag_block = input_definition[:block] || ->(f) do
             tag ||= f.inferred_field_component
             f.send(:"#{tag}_tag", **tag_attributes)
+          end
+
+          if hidden
+            wrapper_options[:class] = tokens("hidden", wrapper_options[:class])
           end
 
           field_options = field_options.except(:as, :condition)
