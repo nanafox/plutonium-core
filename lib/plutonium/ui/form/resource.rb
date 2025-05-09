@@ -61,9 +61,6 @@ module Plutonium
           input_definition = definition.defined_inputs[name] || {}
           input_options = input_definition[:options] || {}
 
-          condition = input_options[:condition] || field_options[:condition]
-          conditionally_hidden = condition && !instance_exec(&condition)
-
           tag = input_options[:as] || field_options[:as]
           tag_attributes = input_options.except(:wrapper, :as, :pre_submit, :condition)
           if input_options[:pre_submit]
@@ -74,12 +71,7 @@ module Plutonium
             f.send(:"#{tag}_tag", **tag_attributes)
           end
 
-          if hidden
-            wrapper_options[:class] = tokens("hidden", wrapper_options[:class])
-          end
-
           field_options = field_options.except(:as, :condition)
-<<<<<<< HEAD
 
           condition = input_options[:condition] || field_options[:condition]
           conditionally_hidden = condition && !instance_exec(&condition)
@@ -97,21 +89,18 @@ module Plutonium
               wrapper_options[:class] = tokens("col-span-full", wrapper_options[:class])
             end
 
-=======
-          if conditionally_hidden
-            # Do not render the field, but still create field
-            # Phlexi form will record it without rendering it, allowing us to extract its value
-            form.field(name, **field_options).wrapped(
-              **wrapper_options
-            ) do |f|
-              instance_exec(f, &tag_block)
-            end
-          else
->>>>>>> 67ace3e (do not render)
-            render form.field(name, **field_options).wrapped(
-              **wrapper_options
-            ) do |f|
-              render instance_exec(f, &tag_block)
+            if conditionally_hidden
+              # Do not render the field, but still create field
+              # Phlexi form will record it without rendering it, allowing us to extract its value
+              form.field(name, **field_options) do |f|
+                instance_exec(f, &tag_block)
+              end
+            else
+              render form.field(name, **field_options).wrapped(
+                **wrapper_options
+              ) do |f|
+                render instance_exec(f, &tag_block)
+              end
             end
           end
         end
