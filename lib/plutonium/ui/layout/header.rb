@@ -36,6 +36,12 @@ module Plutonium
         #   @yield The block containing each action's content
         slot :action, collection: true
 
+        # @param show_sidebar_toggle [Boolean] Whether to show the sidebar toggle button (default: true)
+        def initialize(show_sidebar_toggle: true, **)
+          @show_sidebar_toggle = show_sidebar_toggle
+          super(**)
+        end
+
         # Renders the header component with all its configured elements
         # @note The header is fixed positioned and includes responsive design considerations
         # @return [void]
@@ -56,12 +62,17 @@ module Plutonium
 
         private
 
+        # @return [Boolean] Whether the sidebar toggle is enabled
+        def sidebar_toggle_enabled?
+          @show_sidebar_toggle
+        end
+
         # Renders the left section of the header including sidebar toggle, brand elements,
         # and any yielded content
         # @private
         def render_brand_section
           div(class: "flex justify-start items-center") do
-            render_sidebar_toggle
+            render_sidebar_toggle if sidebar_toggle_enabled?
             render_brand if brand_name_slot? || brand_logo_slot?
           end
         end
