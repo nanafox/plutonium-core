@@ -61,7 +61,7 @@ module Plutonium
               identifier: title.parameterize,
               title: -> { h5(class: "text-2xl font-bold tracking-tight text-gray-900 dark:text-white") { title } }
             ) do
-              FrameNavigatorPanel(title: "", src:)
+              FrameNavigatorPanel(title: "", src:, panel_id: "association-panel-#{title.parameterize}")
             end
           end
 
@@ -83,16 +83,25 @@ module Plutonium
             display_definition = resource_definition.defined_displays[name] || {}
             display_options = display_definition[:options] || {}
 
+            # Check for conditional rendering
+            condition = display_options[:condition] || field_options[:condition]
+            conditionally_hidden = condition && !instance_exec(&condition)
+            return if conditionally_hidden
+
             tag = display_options[:as] || field_options[:as]
-            tag_attributes = display_options.except(:wrapper, :as)
+            tag_attributes = display_options.except(:wrapper, :as, :condition)
             tag_block = display_definition[:block] || ->(f) {
               tag ||= f.inferred_field_component
-              f.send(:"#{tag}_tag", **tag_attributes)
+              if tag.is_a?(Class)
+                f.send :create_component, tag, tag.name.demodulize.underscore.sub(/component$/, "").to_sym
+              else
+                f.send(:"#{tag}_tag", **tag_attributes)
+              end
             }
 
             wrapper_options = display_options[:wrapper] || {}
 
-            field_options = field_options.except(:as)
+            field_options = field_options.except(:as, :condition)
             render field(name, **field_options).wrapped(**wrapper_options) do |f|
               render instance_exec(f, &tag_block)
             end

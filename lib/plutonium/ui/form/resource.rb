@@ -68,7 +68,11 @@ module Plutonium
           end
           tag_block = input_definition[:block] || ->(f) do
             tag ||= f.inferred_field_component
-            f.send(:"#{tag}_tag", **tag_attributes)
+            if tag.is_a?(Class)
+              f.send :create_component, tag, tag.name.demodulize.underscore.sub(/component$/, "").to_sym
+            else
+              f.send(:"#{tag}_tag", **tag_attributes)
+            end
           end
 
           field_options = field_options.except(:as, :condition)
@@ -79,7 +83,7 @@ module Plutonium
             # Do not render the field, but still create field
             # Phlexi form will record it without rendering it, allowing us to extract its value
             form.field(name, **field_options) do |f|
-              instance_exec(f, &tag_block)
+              vanish { render instance_exec(f, &tag_block) }
             end
           else
             wrapper_options = input_options[:wrapper] || {}
